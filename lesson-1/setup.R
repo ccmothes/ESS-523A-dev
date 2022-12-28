@@ -19,8 +19,11 @@ packages <- c('tidyverse',
               'palmerpenguins',
               'sf',
               'terra',
-              'mapview',
-              'rmarkdown')
+              'tmap',
+              'rmarkdown',
+              'tigris',
+              'elevatr',
+              'rgdal')
 
 packageLoad(packages)
 

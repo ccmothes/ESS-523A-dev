@@ -83,11 +83,15 @@ The first thing you do in a fresh R session is set up your environment, which mo
 
 R Packages include reusable functions that are not built-in with R. To use these functions, you must install the package to your local system with the `install.packages()` function. Once a package is installed on your computer you don't need to install it again. Anytime you want to use the package in a new R session you load it with the `library()` function.
 
-#### 4.2.1 Base R vs. The Tidyverse
+**When do I use** `::` ?
+
+If you have a package installed, you don't necessarily have to load it in with `library()` to use it in your R session. Instead you can type the package name followed by `::` and use any functions in that package. This may be useful for some one-off functions using specifici package, however if you will be using packages a lot throughout your workflow you will want to load it in to your session. You should also use `::` in cases where you have multiple packages loaded that may have conflicting functions (e.g., `plot()` in Base R vs. `plot()` in the `terra` package).
+
+#### 4.1.1 Base R vs. The Tidyverse
 
 You may hear us use the terms 'Base R' and 'Tidyverse' a lot throughout this course. Base R includes functions that are installed with the R software and do not require the installation of additional packages to use them. The Tidyverse is a collection of R packages designed for data manipulation, exploration, and visualization that you are likely to use in every day data analysis, and all use the same design philosophy, grammar, and data structures. When you install the Tidyverse, it installs all of these packages, and you can then load all of them in your R session with `library(tidyverse)`. Base R and Tidyverse have many similar functions, but many prefer the style, efficiency and functionality of the Tidyverse packages, and we will mostly be sticking to Tidyverse functions for this course.
 
-#### 4.2.2 Package load function
+#### 4.1.2 Package load function
 
 To make code reproducible (meaning anyone can run your code from their local machines) we can write a function that checks whether or not necessary packages are installed, if not install them and load them, but if they are it will only load them and not re-install. This function looks like:
 
@@ -119,7 +123,11 @@ packages <- c('tidyverse',
               'palmerpenguins',
               'sf',
               'terra',
-              'mapview')
+              'tmap',
+              'rmarkdown',
+              'tigris',
+              'elevatr',
+              'rgdal')
 
 packageLoad(packages)
 ```
@@ -170,8 +178,7 @@ Normally when working with a new data set, the first thing we do is explore the 
 
 ### 6.1 The `penguins` data
 
-For this intro lesson, we are going to use the Palmer Penguins data set (which is loaded with the `palmerpenguins` package you installed in your set up script). This data
-was collected and made available by [Dr. Kristen Gorman](https://www.uaf.edu/cfos/people/faculty/detail/kristen-gorman.php) and the [Palmer Station, Antarctica LTER](https://pallter.marine.rutgers.edu/), a member of the [Long Term Ecological Research Network](https://lternet.edu/).
+For this intro lesson, we are going to use the Palmer Penguins data set (which is loaded with the `palmerpenguins` package you installed in your set up script). This data was collected and made available by [Dr. Kristen Gorman](https://www.uaf.edu/cfos/people/faculty/detail/kristen-gorman.php) and the [Palmer Station, Antarctica LTER](https://pallter.marine.rutgers.edu/), a member of the [Long Term Ecological Research Network](https://lternet.edu/).
 
 Load the `penguins` data set.
 
@@ -323,11 +330,11 @@ arrange(penguins, sex)
 arrange(penguins, desc(species), sex)
 ```
 
-**Note: Tidyverse package functions take in column names *without*****quotations.**
+**Note: Tidyverse package functions take in column names *without*quotations.**
 
 Subset rows with `filter()`
 
-You can filter data in many ways using comparison operators (`>`, `>=`, `<`, `<=`, `!=` (not equal), and `==` (equal)), logical operators (`&` is \"and\", `|` is \"or\", and `!` is \"not\") and other operations such as `%in%`, which returns everything that matches at least on of the values in a given vector, and `is.na()` and `!is.na()` to return all missing or all non-missing data.
+You can filter data in many ways using comparison operators (`>`, `>=`, `<`, `<=`, `!=` (not equal), and `==` (equal)), logical operators (`&` is "and", `|` is "or", and `!` is "not") and other operations such as `%in%`, which returns everything that matches at least on of the values in a given vector, and `is.na()` and `!is.na()` to return all missing or all non-missing data.
 
 ```{r}
 filter(penguins, species == "Adelie")
@@ -372,7 +379,7 @@ These can all be used in conjunction with [`group_by()`](https://dplyr.tidyverse
 
 #### 6.3.1 The pipe `%>%`
 
-The pipe, `%>%`, comes from the **magrittr** package by Stefan Milton Bache. Packages in the tidyverse load `%>%` for you automatically, so you don\'t usually load magrittr explicitly. Pipes are a powerful tool for clearly expressing a sequence of multiple operations.
+The pipe, `%>%`, comes from the **magrittr** package by Stefan Milton Bache. Packages in the tidyverse load `%>%` for you automatically, so you don't usually load magrittr explicitly. Pipes are a powerful tool for clearly expressing a sequence of multiple operations.
 
 For example, the pipe operator can take this sequence of operations:
 
@@ -393,7 +400,7 @@ penguins %>%
   select(species, year, flipper_length_cm)
 ```
 
-You can read it as a series of imperative statements: filter, then mutate, then select. A good way to pronounce `%>%` when reading code is \"then\". It takes the output of the operation to the left of `%>%` and feeds it into the next function as the input.
+You can read it as a series of imperative statements: filter, then mutate, then select. A good way to pronounce `%>%` when reading code is "then". It takes the output of the operation to the left of `%>%` and feeds it into the next function as the input.
 
 Say you want to summarize data by some specified group, for example you want to find the average body mass for each species, this is where the `group_by()` function comes into play.
 
@@ -413,7 +420,7 @@ penguins %>%
 
 6.3.2 Exercises
 
-1.   Reorder the variables in `penguins` so that `year` is the first column followed by the rest (Hint: look into the use of `everything()`).
+1.  Reorder the variables in `penguins` so that `year` is the first column followed by the rest (Hint: look into the use of `everything()`).
 
 2.  Create a new column called 'size_group' where individuals with body mass greater than the overall average are called 'large' and those smaller are called 'small'.
 
@@ -428,8 +435,7 @@ penguins %>%
 
 ## 7. Visualize
 
-A huge part of data exploration includes data visualization to get quick snapshots of your data and reveal patterns you can't see from starting a a data frame of numbers. Here we are going to walk through a very quick introduction to `ggplot2`, using some
-code examples from the `palmerpenguins` R package tutorial: <https://allisonhorst.github.io/palmerpenguins/articles/intro.html>.
+A huge part of data exploration includes data visualization to get quick snapshots of your data and reveal patterns you can't see from starting a a data frame of numbers. Here we are going to walk through a very quick introduction to `ggplot2`, using some code examples from the `palmerpenguins` R package tutorial: <https://allisonhorst.github.io/palmerpenguins/articles/intro.html>.
 
 `ggplot2` is perhaps the most popular data visualization package in the R language, and is also a part of the Tidyverse. One big difference about `ggplot` though is that it does not use the pipe `%>%` operator like we just learned, but instead threads together arguments with `+` signs.
 
@@ -497,3 +503,9 @@ ggplot(penguins) +
 1.  Make a barplot showing the average flipper length for each species.
 
 2.  Make a scatter plot of bill length compared to bill depth but only for observations on the Dream island.
+
+## 8. Read and Write Data
+
+We used an R data package today and read in our data frame, but that probably isn't how you will normally read in your data.
+
+There are many ways to read and write data in R. To read in .csv files, you can use `read_csv()` which is included in the Tidyverse with the `readr` package, and to save csv files use `write_csv()`. The `readxl` package is great for reading in excel files, however it is not included in the Tidyverse and will need to be loaded separately.
